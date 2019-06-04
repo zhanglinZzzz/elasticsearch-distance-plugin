@@ -43,3 +43,6 @@ GET /distance/_search
 | input | 输入的向量，至少一个维度，value值可以是整数，也可以是小数 |
 | distance_type | 距离类型，支持euclidean(欧式距离，默认)、cosine(余弦距离) |
 | scale | 精度，默认值为2 |
+
+### 注意
+使用function_score查询而不是script查询，距离字段不会显示在fields中，返回结果的分数_score即为距离，只需要对_score进行排序即可实现按距离排序。
