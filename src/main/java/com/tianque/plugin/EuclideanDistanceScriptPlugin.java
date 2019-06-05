@@ -30,10 +30,11 @@ public class EuclideanDistanceScriptPlugin extends Plugin implements ScriptPlugi
     private static class EuclideanDistanceScriptEngine implements ScriptEngine {
 
         private static final String SCRIPT_SOURCE = "tianque-script";
+        private static final String SCRIPT_LANG = "distance";
 
         @Override
         public String getType() {
-            return "distance";
+            return SCRIPT_LANG;
         }
 
         @Override
@@ -118,7 +119,7 @@ public class EuclideanDistanceScriptPlugin extends Plugin implements ScriptPlugi
                              */
                             private BigDecimal calculateEuclideanDistance(Map<String, Object> input,
                                 Map<String, Object> target) {
-                                BigDecimal result = new BigDecimal("0.0");
+                                BigDecimal result = BigDecimal.ZERO;
                                 for (String field : input.keySet()) {
                                     BigDecimal inputValue = new BigDecimal(input.get(field).toString());
                                     BigDecimal targetValue = new BigDecimal(target.get(field).toString());
@@ -135,10 +136,9 @@ public class EuclideanDistanceScriptPlugin extends Plugin implements ScriptPlugi
                              */
                             private BigDecimal calculateCosineDistance(Map<String, Object> input,
                                 Map<String, Object> target) {
-                                double result = 0.0;
-                                BigDecimal numerator = new BigDecimal("0.0");
-                                BigDecimal inputDenominator = new BigDecimal("0.0");
-                                BigDecimal targetDenominator = new BigDecimal("0.0");
+                                BigDecimal numerator = BigDecimal.ZERO;
+                                BigDecimal inputDenominator = BigDecimal.ZERO;
+                                BigDecimal targetDenominator = BigDecimal.ZERO;
                                 for (String field : input.keySet()) {
                                     BigDecimal inputValue = new BigDecimal(input.get(field).toString());
                                     BigDecimal targetValue = new BigDecimal(target.get(field).toString());
@@ -151,7 +151,7 @@ public class EuclideanDistanceScriptPlugin extends Plugin implements ScriptPlugi
                                 if (BigDecimal.ZERO.equals(inputDenominator) || BigDecimal.ZERO
                                     .equals(targetDenominator)) {
                                     throw new IllegalArgumentException(
-                                        "calculate cosine distance error, there are origins in the documents and input");
+                                        "Calculate cosine distance error, there are origins in the documents and the input");
                                 }
                                 return numerator.divide(inputDenominator.multiply(targetDenominator), scale,
                                     BigDecimal.ROUND_HALF_UP);
