@@ -20,7 +20,7 @@ import java.util.Map;
  * @author zhanglin
  * @date 2019-6-3 15:34
  */
-public class EuclideanDistanceScriptPlugin extends Plugin implements ScriptPlugin {
+public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
 
     @Override
     public ScriptEngine getScriptEngine(Settings settings, Collection<ScriptContext<?>> contexts) {
