@@ -51,7 +51,7 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
                     private final Integer scale;
 
                     {
-                        if (p.containsKey("input") == false) {
+                        if (!p.containsKey("input")) {
                             throw new IllegalArgumentException("Missing parameter [field]");
                         }
                         try {
@@ -62,7 +62,7 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
                         if (input == null || input.size() == 0) {
                             throw new IllegalArgumentException("Input is empty");
                         }
-                        if (p.containsKey("distance_type") == true) {
+                        if (p.containsKey("distance_type")) {
                             distanceType = p.get("distance_type").toString();
                             if (!EUCLIDEAN_DISTANCE.equals(distanceType) && !COSINE_DISTANCE.equals(distanceType)) {
                                 throw new IllegalArgumentException(
@@ -71,7 +71,7 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
                         } else {
                             distanceType = EUCLIDEAN_DISTANCE;
                         }
-                        if (p.containsKey("scale") == false) {
+                        if (!p.containsKey("scale")) {
                             scale = 2;
                         } else {
                             try {
@@ -93,7 +93,7 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
                             @Override
                             public double execute() {
                                 for (String field : input.keySet()) {
-                                    if (lookup.source().containsKey(field) == false) {
+                                    if (!lookup.source().containsKey(field)) {
                                         throw new IllegalArgumentException("Cannot find the field [" + field + "]");
                                     }
                                 }
@@ -171,6 +171,5 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
                 throw new IllegalArgumentException("Unknown script name [" + scriptSource + "]");
             }
         }
-
     }
 }
