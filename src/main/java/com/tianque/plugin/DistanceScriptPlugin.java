@@ -24,10 +24,10 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
 
     @Override
     public ScriptEngine getScriptEngine(Settings settings, Collection<ScriptContext<?>> contexts) {
-        return new EuclideanDistanceScriptEngine();
+        return new DistanceScriptEngine();
     }
 
-    private static class EuclideanDistanceScriptEngine implements ScriptEngine {
+    private static class DistanceScriptEngine implements ScriptEngine {
 
         private static final String SCRIPT_SOURCE = "tianque-script";
         private static final String SCRIPT_LANG = "distance";
