@@ -10,8 +10,9 @@ import org.elasticsearch.script.ScriptEngine;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,8 +46,11 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
 
                     private static final String EUCLIDEAN_DISTANCE = "euclidean";
                     private static final String COSINE_DISTANCE = "cosine";
+                    private static final String DEFAULE_SEPARATOR = ",";
 
                     private final Map<String, Object> input;
+                    private final List<Integer> inputValueList;
+                    private final String separator;
                     private final String distanceType;
                     private final Integer scale;
 
@@ -61,6 +65,29 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
                         }
                         if (input == null || input.size() == 0) {
                             throw new IllegalArgumentException("Input is empty");
+                        }
+                        if (input.size() != 1) {
+                            throw new IllegalArgumentException(
+                                "The number of key-value mappings in the [input] is not one");
+                        }
+                        if (p.containsKey("separator")) {
+                            separator = p.get("separator").toString();
+                        } else {
+                            separator = DEFAULE_SEPARATOR;
+                        }
+                        if (separator == null || separator.length() == 0) {
+                            throw new IllegalArgumentException("The [separator] cannot be ''");
+                        }
+                        try {
+                            String key = input.keySet().iterator().next();
+                            inputValueList = string2List(input.get(key).toString(), separator);
+                        } catch (Exception e) {
+                            throw new IllegalArgumentException("Parse [input] error, check your [input] or [separator]",
+                                e);
+                        }
+                        if (inputValueList == null || inputValueList.size() == 0) {
+                            throw new IllegalArgumentException(
+                                "Parse [input] error, check your [input] or [separator]");
                         }
                         if (p.containsKey("distance_type")) {
                             distanceType = p.get("distance_type").toString();
@@ -78,7 +105,7 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
                                 scale = Integer.parseInt(p.get("scale").toString());
                             } catch (Exception e) {
                                 throw new IllegalArgumentException(
-                                    "Parse [scale] error, the value of field [scale] must be a integer");
+                                    "Parse [scale] error, the value of field [scale] must be a integer", e);
                             }
                         }
                         if (scale < 0) {
@@ -92,37 +119,38 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
                         return new ScoreScript(p, lookup, ctx) {
                             @Override
                             public double execute() {
-                                for (String field : input.keySet()) {
-                                    if (!lookup.source().containsKey(field)) {
-                                        throw new IllegalArgumentException("Cannot find the field [" + field + "]");
-                                    }
+                                String field = input.keySet().iterator().next();
+                                if (!lookup.source().containsKey(field)) {
+                                    throw new IllegalArgumentException("Cannot find the field [" + field + "]");
                                 }
-                                Map<String, Object> target = new HashMap<String, Object>();
-                                for (String field : input.keySet()) {
-                                    Object value = lookup.source().get(field).toString();
-                                    target.put(field, value);
+                                String value = lookup.source().get(field).toString();
+                                List<Integer> targetValueList = string2List(value, separator);
+                                if (inputValueList.size() != targetValueList.size()) {
+                                    throw new IllegalArgumentException(
+                                        "The length of [" + field + "] you enter is not equal to the length of ["
+                                            + field + "] in documents");
                                 }
                                 BigDecimal result;
                                 if (EUCLIDEAN_DISTANCE.equals(distanceType)) {
-                                    result = calculateEuclideanDistance(input, target);
+                                    result = calculateEuclideanDistance(inputValueList, targetValueList);
                                 } else {
-                                    result = calculateCosineDistance(input, target);
+                                    result = calculateCosineDistance(inputValueList, targetValueList);
                                 }
                                 return result.setScale(scale, BigDecimal.ROUND_HALF_UP).doubleValue();
                             }
 
                             /**
                              * 计算欧氏距离
-                             * @param input
-                             * @param target
+                             * @param inputValueList
+                             * @param targetValueList
                              * @return
                              */
-                            private BigDecimal calculateEuclideanDistance(Map<String, Object> input,
-                                Map<String, Object> target) {
+                            private BigDecimal calculateEuclideanDistance(List<Integer> inputValueList,
+                                List<Integer> targetValueList) {
                                 BigDecimal result = BigDecimal.ZERO;
-                                for (String field : input.keySet()) {
-                                    BigDecimal inputValue = new BigDecimal(input.get(field).toString());
-                                    BigDecimal targetValue = new BigDecimal(target.get(field).toString());
+                                for (int i = 0; i < inputValueList.size(); i++) {
+                                    BigDecimal inputValue = new BigDecimal(inputValueList.get(i));
+                                    BigDecimal targetValue = new BigDecimal(targetValueList.get(i));
                                     result = result.add(inputValue.subtract(targetValue).pow(2));
                                 }
                                 return new BigDecimal(Math.sqrt(result.doubleValue()));
@@ -130,18 +158,18 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
 
                             /**
                              * 计算余弦距离
-                             * @param input
-                             * @param target
+                             * @param inputValueList
+                             * @param targetValueList
                              * @return
                              */
-                            private BigDecimal calculateCosineDistance(Map<String, Object> input,
-                                Map<String, Object> target) {
+                            private BigDecimal calculateCosineDistance(List<Integer> inputValueList,
+                                List<Integer> targetValueList) {
                                 BigDecimal numerator = BigDecimal.ZERO;
                                 BigDecimal inputDenominator = BigDecimal.ZERO;
                                 BigDecimal targetDenominator = BigDecimal.ZERO;
-                                for (String field : input.keySet()) {
-                                    BigDecimal inputValue = new BigDecimal(input.get(field).toString());
-                                    BigDecimal targetValue = new BigDecimal(target.get(field).toString());
+                                for (int i = 0; i < inputValueList.size(); i++) {
+                                    BigDecimal inputValue = new BigDecimal(inputValueList.get(i));
+                                    BigDecimal targetValue = new BigDecimal(targetValueList.get(i));
                                     numerator = numerator.add(inputValue.multiply(targetValue));
                                     inputDenominator = inputDenominator.add(inputValue.pow(2));
                                     targetDenominator = targetDenominator.add(targetValue.pow(2));
@@ -165,6 +193,17 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
                         return false;
                     }
 
+                    private List<Integer> string2List(String str, String separator) {
+                        List<Integer> list = new ArrayList<Integer>();
+                        if (str != null && str.length() > 0) {
+                            String[] values = str.split(separator);
+                            for (String value : values) {
+                                Integer valueInteger = Integer.parseInt(value.trim());
+                                list.add(valueInteger);
+                            }
+                        }
+                        return list;
+                    }
                 };
                 return context.factoryClazz.cast(factory);
             } else {

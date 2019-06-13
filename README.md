@@ -16,8 +16,7 @@ GET /distance/_search
               "source": "tianque-script",
               "params": {
                 "input":{
-                  "x":1,
-                  "y":1
+                  "value":"0,0,0,0,0,0,0,0,0,0"
                 },
                 "distance_type":"euclidean",
                 "scale":10
