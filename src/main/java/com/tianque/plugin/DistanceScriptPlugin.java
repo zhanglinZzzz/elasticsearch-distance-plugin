@@ -46,7 +46,7 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
 
                     private static final String EUCLIDEAN_DISTANCE = "euclidean";
                     private static final String COSINE_DISTANCE = "cosine";
-                    private static final String DEFAULE_SEPARATOR = ",";
+                    private static final String DEFAULT_SEPARATOR = ",";
 
                     private final Map<String, Object> input;
                     private final List<Integer> inputValueList;
@@ -73,7 +73,7 @@ public class DistanceScriptPlugin extends Plugin implements ScriptPlugin {
                         if (p.containsKey("separator")) {
                             separator = p.get("separator").toString();
                         } else {
-                            separator = DEFAULE_SEPARATOR;
+                            separator = DEFAULT_SEPARATOR;
                         }
                         if (separator == null || separator.length() == 0) {
                             throw new IllegalArgumentException("The [separator] cannot be ''");
